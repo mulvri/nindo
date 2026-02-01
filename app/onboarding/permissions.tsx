@@ -25,9 +25,6 @@ export default function PermissionsScreen() {
   const handleComplete = async () => {
     setIsLoading(true);
     try {
-      // Demander d'abord la permission pour les notifications
-      await NotificationService.requestPermissions();
-
       // Save preferences to database with firstName
       await saveUserPreferences({
         onboardingCompleted: true,
@@ -93,20 +90,7 @@ export default function PermissionsScreen() {
             </AppText>
           </Animated.View>
 
-         
-          {/* Progress Dots */}
-          <Animated.View
-            entering={FadeInDown.delay(600).duration(600)}
-            className="flex-row items-center justify-center mb-4"
-          >
-            <View className="w-2 h-2 bg-primary rounded-full mr-2" />
-            <View className="w-2 h-2 bg-primary rounded-full mr-2" />
-            <View className="w-2 h-2 bg-primary rounded-full mr-2" />
-            <View className="w-2 h-2 bg-primary rounded-full mr-2" />
-            <View className="w-8 h-2 bg-primary rounded-full" />
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(700).duration(600)}>
+          <Animated.View entering={FadeInDown.delay(600).duration(600)}>
             <Pressable
               onPress={handleComplete}
               className="h-14 bg-primary rounded-2xl items-center justify-center"

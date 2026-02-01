@@ -122,13 +122,18 @@ export const NotificationService = {
 
   /**
    * Planifie les notifications de citations pour un rappel spécifique
+   * - La première notification est à l'heure de début exacte
+   * - Les suivantes sont distribuées uniformément jusqu'à l'heure de fin
+   * - Maximum 10 notifications par jour
    */
   async scheduleQuoteNotificationsForReminder(reminder: any) {
-    if (!reminder.enabled || reminder.count === 0) return;
+    // Limiter entre 1 et 10
+    const count = Math.min(10, Math.max(1, reminder.count || 1));
+    if (!reminder.enabled || count === 0) return;
 
     const { getFilteredQuotes } = require("./database");
     let allQuotes = await getFilteredQuotes();
-    
+
     if (reminder.category && reminder.category !== "General") {
       // Pour l'instant on filtre par mood si la catégorie match
       allQuotes = allQuotes.filter((q: any) => q.mood === reminder.category);
@@ -137,43 +142,49 @@ export const NotificationService = {
     if (allQuotes.length === 0) return;
 
     // Mélanger et prendre 'count' citations
-    const selectedQuotes = allQuotes.sort(() => 0.5 - Math.random()).slice(0, reminder.count);
+    const selectedQuotes = allQuotes.sort(() => 0.5 - Math.random()).slice(0, count);
 
     // Répartir sur la plage horaire
     const [startH, startM] = (reminder.startTime || "09:00").split(":").map(Number);
     const [endH, endM] = (reminder.endTime || "21:00").split(":").map(Number);
-    
+
     const startTimeInMinutes = startH * 60 + startM;
     const endTimeInMinutes = endH * 60 + endM;
     const totalMinutes = endTimeInMinutes - startTimeInMinutes;
-    
+
     if (totalMinutes <= 0) return;
 
-    const interval = totalMinutes / reminder.count;
+    // Calcul de l'intervalle entre chaque notification
+    // Si count = 1, la seule notification est à startTime
+    // Si count > 1, on distribue uniformément entre startTime et endTime
+    const interval = count > 1 ? totalMinutes / (count - 1) : 0;
     const days = JSON.parse(reminder.repeatDays || "[1,2,3,4,5,6,7]");
 
     for (let i = 0; i < selectedQuotes.length; i++) {
       const quote = selectedQuotes[i];
-      const timeOffset = Math.floor(i * interval + Math.random() * (interval * 0.5));
+      // Première notification à l'heure exacte, les autres distribuées uniformément
+      const timeOffset = i === 0 ? 0 : Math.floor(i * interval);
       const targetTotalMinutes = startTimeInMinutes + timeOffset;
       const hour = Math.floor(targetTotalMinutes / 60);
       const minute = targetTotalMinutes % 60;
 
       // Planifier pour chaque jour actif
+      // Sur Android: type "weekly" pour répéter chaque semaine le même jour
+      // Sur iOS: type "calendar" avec weekday et repeats
       for (const weekday of days) {
         const trigger = Platform.OS === "android"
           ? ({
-              type: "daily",
+              type: "weekly",
               hour,
               minute,
-              weekday, // Expo Notifications supports weekday for daily on Android? Check docs. Usually it's 'day' for weekly.
+              weekday,
               channelId: "default",
             } as any)
           : ({
               type: "calendar",
               hour,
               minute,
-              weekday, 
+              weekday,
               repeats: true,
             } as any);
 
@@ -203,9 +214,10 @@ export const NotificationService = {
     const [hour, minute] = (reminder.startTime || "08:00").split(":").map(Number);
     const days = JSON.parse(reminder.repeatDays || "[1,2,3,4,5,6,7]");
 
+    // Sur Android: type "weekly" pour répéter chaque semaine le même jour
     for (const weekday of days) {
       const trigger = Platform.OS === "android"
-        ? ({ type: "daily", hour, minute, weekday, channelId: "default" } as any)
+        ? ({ type: "weekly", hour, minute, weekday, channelId: "default" } as any)
         : ({ type: "calendar", hour, minute, weekday, repeats: true } as any);
 
       await Notifications.scheduleNotificationAsync({

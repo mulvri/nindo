@@ -140,6 +140,7 @@ export default function NameScreen() {
             <View className="w-8 h-2 bg-primary rounded-full mr-2" />
             <View className="w-2 h-2 bg-gray-600 rounded-full mr-2" />
             <View className="w-2 h-2 bg-gray-600 rounded-full mr-2" />
+            <View className="w-2 h-2 bg-gray-600 rounded-full mr-2" />
             <View className="w-2 h-2 bg-gray-600 rounded-full" />
           </Animated.View>
 

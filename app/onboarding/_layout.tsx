@@ -13,6 +13,7 @@ export default function OnboardingLayout() {
       <Stack.Screen name="name" />
       <Stack.Screen name="animes" />
       <Stack.Screen name="moods" />
+      <Stack.Screen name="notifications" />
       <Stack.Screen name="permissions" />
     </Stack>
   );

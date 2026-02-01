@@ -56,7 +56,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </AppText>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} className="mt-4">
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              className="mt-4"
+              contentContainerStyle={{ paddingBottom: 20 }}
+              nestedScrollEnabled
+            >
               {children}
             </ScrollView>
           </View>

@@ -31,13 +31,22 @@ export function EditReminderModal({ visible, reminder, onClose, onSave }: EditRe
   const [formData, setFormData] = useState<any>(null);
 
   useEffect(() => {
-    if (reminder) {
+    if (visible && reminder) {
+      // Réinitialiser formData quand le modal s'ouvre
+      // On utilise un délai minimal pour s'assurer que le state est bien mis à jour
       setFormData({
         ...reminder,
         repeatDays: JSON.parse(reminder.repeatDays || "[1,2,3,4,5,6,7]")
       });
     }
-  }, [reminder, visible]);
+  }, [visible, reminder]);
+
+  useEffect(() => {
+    if (!visible) {
+      // Réinitialiser quand le modal se ferme
+      setFormData(null);
+    }
+  }, [visible]);
 
   if (!formData) return null;
 
@@ -66,7 +75,8 @@ export function EditReminderModal({ visible, reminder, onClose, onSave }: EditRe
   };
 
   const adjustCount = (val: number) => {
-    const next = Math.max(1, Math.min(20, (formData.count || 1) + val));
+    // Limiter entre 1 et 10 citations par jour
+    const next = Math.max(1, Math.min(10, (formData.count || 1) + val));
     setFormData({ ...formData, count: next });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };

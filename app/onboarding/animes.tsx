@@ -39,10 +39,11 @@ export default function AnimesScreen() {
 
       <View className="p-6 border-t" style={{ borderColor: "rgba(255, 255, 255, 0.1)" }}>
         {/* Progress Dots */}
-        <View className="flex-row items-center justify-center mb-4">
+        <View className="flex-row items-center mb-6">
           <View className="w-2 h-2 bg-primary rounded-full mr-2" />
           <View className="w-2 h-2 bg-primary rounded-full mr-2" />
           <View className="w-8 h-2 bg-primary rounded-full mr-2" />
+          <View className="w-2 h-2 bg-gray-600 rounded-full mr-2" />
           <View className="w-2 h-2 bg-gray-600 rounded-full mr-2" />
           <View className="w-2 h-2 bg-gray-600 rounded-full" />
         </View>

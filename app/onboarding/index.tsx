@@ -36,7 +36,7 @@ export default function WelcomeScreen() {
 
         <View className="px-6 py-8 justify-end">
           <Animated.View entering={FadeInUp.delay(300).duration(800)}>
-            <AppText variant="black" size="5xl" className="text-foreground mb-3 tracking-tighter">
+            <AppText variant="black" size="4xl" className="text-foreground mb-3 tracking-tighter">
               Bienvenue dans{"\n"}Nindo
             </AppText>
           </Animated.View>
@@ -55,6 +55,7 @@ export default function WelcomeScreen() {
             className="flex-row items-center mb-6"
           >
             <View className="w-8 h-2 bg-primary rounded-full mr-2" />
+            <View className="w-2 h-2 bg-gray-600 rounded-full mr-2" />
             <View className="w-2 h-2 bg-gray-600 rounded-full mr-2" />
             <View className="w-2 h-2 bg-gray-600 rounded-full mr-2" />
             <View className="w-2 h-2 bg-gray-600 rounded-full mr-2" />

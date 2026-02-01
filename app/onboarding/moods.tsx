@@ -15,8 +15,8 @@ export default function MoodsScreen() {
   const { theme } = useThemeStore();
   const currentTheme = THEMES[theme] || THEMES.light;
 
-  const handleFinish = () => {
-    router.push("/onboarding/permissions");
+  const handleContinue = () => {
+    router.push("/onboarding/notifications");
   };
 
   return (
@@ -47,11 +47,12 @@ export default function MoodsScreen() {
 
       <View className="p-6 border-t" style={{ borderColor: "rgba(255, 255, 255, 0.1)" }}>
         {/* Progress Dots */}
-        <View className="flex-row items-center justify-center mb-4">
+        <View className="flex-row items-center mb-6">
           <View className="w-2 h-2 bg-primary rounded-full mr-2" />
           <View className="w-2 h-2 bg-primary rounded-full mr-2" />
           <View className="w-2 h-2 bg-primary rounded-full mr-2" />
           <View className="w-8 h-2 bg-primary rounded-full mr-2" />
+          <View className="w-2 h-2 bg-gray-600 rounded-full mr-2" />
           <View className="w-2 h-2 bg-gray-600 rounded-full" />
         </View>
 
@@ -64,7 +65,7 @@ export default function MoodsScreen() {
           </Pressable>
 
           <Pressable
-            onPress={handleFinish}
+            onPress={handleContinue}
             className={`h-14 flex-[2] rounded-2xl items-center justify-center ${
               selectedMoods.length > 0 ? "bg-primary" : "bg-surface"
             }`}
@@ -77,7 +78,7 @@ export default function MoodsScreen() {
                 selectedMoods.length > 0 ? "text-white" : "text-gray-500"
               }`}
             >
-              C'est parti !
+              Continuer
             </AppText>
           </Pressable>
         </View>

@@ -53,6 +53,42 @@ const initialQuotes = [
 ];
 
 /**
+ * Créer les rappels par défaut
+ */
+async function createDefaultReminders() {
+  // 1. Rappel Mood
+  await db.insert(reminders).values({
+    type: "mood",
+    title: "Check-in Mood",
+    enabled: true,
+    startTime: "08:00",
+    repeatDays: JSON.stringify([1,2,3,4,5,6,7]),
+    createdAt: new Date().toISOString()
+  });
+  // 2. Rappel Citations
+  await db.insert(reminders).values({
+    type: "quote",
+    title: "Citations Ninja",
+    enabled: true,
+    count: 3,
+    startTime: "09:00",
+    endTime: "21:00",
+    repeatDays: JSON.stringify([1,2,3,4,5,6,7]),
+    createdAt: new Date().toISOString()
+  });
+  // 3. Rappel Streak
+  await db.insert(reminders).values({
+    type: "streak",
+    title: "Flamme en danger",
+    enabled: true,
+    startTime: "20:00",
+    repeatDays: JSON.stringify([1,2,3,4,5,6,7]),
+    createdAt: new Date().toISOString()
+  });
+  console.log("Nindo: Default reminders created");
+}
+
+/**
  * Run basic migrations manually for the MVP.
  */
 export async function initializeDatabase() {
@@ -196,48 +232,10 @@ export async function initializeDatabase() {
       )
     `);
 
-    // Migration initiale des paramètres existants vers la table reminders si vide
+    // Créer les rappels par défaut si la table est vide
     const existingReminders = await db.select().from(reminders);
     if (existingReminders.length === 0) {
-      const prefs = await db.select().from(userPreferences).limit(1);
-      if (prefs.length > 0) {
-        const p = prefs[0];
-        // 1. Rappel Mood
-        if (p.moodReminderEnabled) {
-          await db.insert(reminders).values({
-            type: "mood",
-            title: "Général",
-            enabled: true,
-            startTime: p.reminderTime || "08:00",
-            repeatDays: JSON.stringify([1,2,3,4,5,6,7]),
-            createdAt: new Date().toISOString()
-          });
-        }
-        // 2. Rappel Citations
-        if (p.quoteNotificationsEnabled) {
-          await db.insert(reminders).values({
-            type: "quote",
-            title: "Inspiration Ninja",
-            enabled: true,
-            count: parseInt(p.quoteNotificationsFrequency || "1"),
-            startTime: "09:00",
-            endTime: "21:00",
-            repeatDays: JSON.stringify([1,2,3,4,5,6,7]),
-            createdAt: new Date().toISOString()
-          });
-        }
-        // 3. Rappel Streak
-        if (p.streakReminderEnabled) {
-          await db.insert(reminders).values({
-            type: "streak",
-            title: "Rappels de série",
-            enabled: true,
-            startTime: "20:00",
-            repeatDays: JSON.stringify([1,2,3,4,5,6,7]),
-            createdAt: new Date().toISOString()
-          });
-        }
-      }
+      await createDefaultReminders();
     }
 
     // Index pour optimiser les requêtes par date
@@ -900,6 +898,7 @@ export async function resetDatabase() {
   await db.delete(streakHistory);
   await db.delete(achievements);
   await db.delete(notificationHistory);
+  await db.delete(reminders);
 
   await db.insert(userPreferences).values({
     onboardingCompleted: false,
@@ -911,11 +910,23 @@ export async function resetDatabase() {
     totalDaysOpened: 0,
     lastOpeningDate: null
   });
+
+  // Recréer les rappels par défaut
+  await createDefaultReminders();
 }
 
 // REMINDERS CRUD
 export async function getReminders() {
-  return await db.select().from(reminders).orderBy(reminders.id);
+  const result = await db.select().from(reminders).orderBy(reminders.id);
+
+  // Si aucun rappel n'existe, créer les rappels par défaut
+  if (result.length === 0) {
+    console.log("Nindo: No reminders found, creating defaults...");
+    await createDefaultReminders();
+    return await db.select().from(reminders).orderBy(reminders.id);
+  }
+
+  return result;
 }
 
 export async function addReminder(reminder: typeof reminders.$inferInsert) {
