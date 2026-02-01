@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(npx expo install react-native-gifted-charts)",
+      "Bash(npm uninstall:*)",
+      "Bash(npx expo install victory-native)",
+      "Bash(bun install:*)"
+    ]
+  }
+}

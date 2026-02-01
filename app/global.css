@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  text {
+    font-family: Poppins_400Regular;
+  }
+}
+
+:root {
+  --primary: #FF6B35;
+  --abyss: #0A0A0A;
+  --surface: #1A1A1A;
+  --background: #0A0A0A;
+  --foreground: #FFFFFF;
+}
