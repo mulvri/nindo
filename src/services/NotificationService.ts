@@ -13,7 +13,33 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// Variable pour éviter les listeners multiples
+let listenersSetup = false;
+
 export const NotificationService = {
+  /**
+   * Configure les listeners pour les notifications
+   * Appelé une seule fois au démarrage de l'app
+   */
+  setupListeners() {
+    if (listenersSetup) return;
+    listenersSetup = true;
+
+    // Listener quand une notification est reçue (app au premier plan)
+    Notifications.addNotificationReceivedListener((notification) => {
+      console.log("Nindo: Notification reçue:", notification.request.content.title);
+      // Reprogrammer les notifications après réception
+      // pour maintenir le cycle hebdomadaire
+      this.syncNotifications();
+    });
+
+    // Listener quand l'utilisateur interagit avec la notification
+    Notifications.addNotificationResponseReceivedListener((response) => {
+      console.log("Nindo: Notification cliquée:", response.notification.request.content.data);
+      // On peut naviguer vers un écran spécifique ici si nécessaire
+    });
+  },
+
   /**
    * Demande les permissions pour les notifications
    */
@@ -121,6 +147,41 @@ export const NotificationService = {
   },
 
   /**
+   * Calcule la prochaine date pour un jour de la semaine donné
+   * @param targetWeekday 1=Lundi, 7=Dimanche (format ISO)
+   * @param hour Heure cible
+   * @param minute Minute cible
+   */
+  getNextDateForWeekday(targetWeekday: number, hour: number, minute: number): Date {
+    const now = new Date();
+    const currentDay = now.getDay(); // 0=Dimanche, 1=Lundi, ..., 6=Samedi
+
+    // Convertir targetWeekday (1=Lundi, 7=Dimanche) vers JS (0=Dimanche, 6=Samedi)
+    const jsTargetDay = targetWeekday === 7 ? 0 : targetWeekday;
+
+    // Calculer les jours jusqu'au prochain jour cible
+    let daysUntilTarget = jsTargetDay - currentDay;
+    if (daysUntilTarget < 0) {
+      daysUntilTarget += 7;
+    }
+
+    // Si c'est aujourd'hui, vérifier si l'heure est passée
+    if (daysUntilTarget === 0) {
+      const targetTime = hour * 60 + minute;
+      const currentTime = now.getHours() * 60 + now.getMinutes();
+      if (currentTime >= targetTime) {
+        daysUntilTarget = 7; // Programmer pour la semaine prochaine
+      }
+    }
+
+    const targetDate = new Date(now);
+    targetDate.setDate(now.getDate() + daysUntilTarget);
+    targetDate.setHours(hour, minute, 0, 0);
+
+    return targetDate;
+  },
+
+  /**
    * Planifie les notifications de citations pour un rappel spécifique
    * - La première notification est à l'heure de début exacte
    * - Les suivantes sont distribuées uniformément jusqu'à l'heure de fin
@@ -169,31 +230,23 @@ export const NotificationService = {
       const minute = targetTotalMinutes % 60;
 
       // Planifier pour chaque jour actif
-      // Sur Android: type "weekly" pour répéter chaque semaine le même jour
-      // Sur iOS: type "calendar" avec weekday et repeats
       for (const weekday of days) {
-        const trigger = Platform.OS === "android"
-          ? ({
-              type: "weekly",
-              hour,
-              minute,
-              weekday,
-              channelId: "default",
-            } as any)
-          : ({
-              type: "calendar",
-              hour,
-              minute,
-              weekday,
-              repeats: true,
-            } as any);
+        // Calculer la prochaine date pour ce jour de la semaine
+        const nextDate = this.getNextDateForWeekday(weekday, hour, minute);
+
+        // Utiliser un trigger de type "date" qui est supporté sur toutes les plateformes
+        const trigger: Notifications.NotificationTriggerInput = {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: nextDate,
+          channelId: Platform.OS === "android" ? "default" : undefined,
+        };
 
         await Notifications.scheduleNotificationAsync({
           content: {
             title: reminder.title || "Inspiration du Ninja",
             body: `"${quote.text}" — ${quote.author}`,
-            data: { 
-              type: "quote", 
+            data: {
+              type: "quote",
               quoteId: quote.id,
               author: quote.author,
               anime: quote.anime
@@ -214,17 +267,22 @@ export const NotificationService = {
     const [hour, minute] = (reminder.startTime || "08:00").split(":").map(Number);
     const days = JSON.parse(reminder.repeatDays || "[1,2,3,4,5,6,7]");
 
-    // Sur Android: type "weekly" pour répéter chaque semaine le même jour
+    // Programmer une notification pour chaque jour actif
     for (const weekday of days) {
-      const trigger = Platform.OS === "android"
-        ? ({ type: "weekly", hour, minute, weekday, channelId: "default" } as any)
-        : ({ type: "calendar", hour, minute, weekday, repeats: true } as any);
+      // Calculer la prochaine date pour ce jour de la semaine
+      const nextDate = this.getNextDateForWeekday(weekday, hour, minute);
+
+      const trigger: Notifications.NotificationTriggerInput = {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: nextDate,
+        channelId: Platform.OS === "android" ? "default" : undefined,
+      };
 
       await Notifications.scheduleNotificationAsync({
         content: {
           title: reminder.type === "mood" ? "Dojo de Nindo" : "Flamme en danger !",
-          body: reminder.type === "mood" 
-            ? "Quel est ton mood aujourd'hui ?" 
+          body: reminder.type === "mood"
+            ? "Quel est ton mood aujourd'hui ?"
             : "Ton streak est sur le point de s'éteindre !",
           data: { type: reminder.type === "mood" ? "mood_reminder" : "streak_danger" },
         },

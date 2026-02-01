@@ -131,14 +131,14 @@ export const QuoteCard = ({ quote: initialQuote }: QuoteCardProps) => {
           </View>
 
           <AppText
-            variant={quote.isUserCreated ? "black" : "semibold"}
+            variant="semibold"
             className="text-foreground mb-10 leading-tight"
             style={[
               {
                 fontSize: 24 * quoteFontScale,
               },
-              quote.isUserCreated ? {
-                fontFamily: customFont?.fontFamily,
+              quote.isUserCreated && customFont ? {
+                fontFamily: customFont.fontFamily,
               } : undefined
             ]}
           >

@@ -100,6 +100,7 @@ export function AppInitializer() {
           useAppStore.getState().setInitialRouteName("index");
 
           // Handle notifications and moods for returning users
+          NotificationService.setupListeners();
           NotificationService.syncNotifications();
 
           // Delay modals to ensure navigation context is fully mounted
